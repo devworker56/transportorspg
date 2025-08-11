@@ -1,79 +1,47 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
-    # Force HTTPS
+
+    # Redirect HTTP to HTTPS (excluding localhost)
     RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP_HOST} !^localhost [NC]
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-    
+
     # Remove trailing slashes
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)/$ /$1 [L,R=301]
-    
-    # Redirect all requests to index.php (for front controller pattern)
+
+    # Remove .php extension from URLs
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.php [L]
-    
-    # Prevent directory listing
-    Options -Indexes
-    
-    # Block access to sensitive files
-    <FilesMatch "(\.(env|log|htaccess)|config\.php|composer\.(json|lock))">
-        Require all denied
-    </FilesMatch>
-    
-    # Block access to includes directory
-    <FilesMatch "(auth|config|db_connect|functions)\.php">
-        Require all denied
-    </FilesMatch>
-    
-    # Prevent access to .git directory
-    RedirectMatch 404 /\.git
-    
-    # Security headers
-    <IfModule mod_headers.c>
-        Header set X-XSS-Protection "1; mode=block"
-        Header always append X-Frame-Options SAMEORIGIN
-        Header set X-Content-Type-Options nosniff
-        Header set Referrer-Policy "strict-origin-when-cross-origin"
-        Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://images.unsplash.com https://via.placeholder.com; font-src 'self' https://cdnjs.cloudflare.com;"
-    </IfModule>
+    RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+    # Protect sensitive directories
+    RewriteRule ^(includes|admin/config|logs) - [F,L,NC]
+
+    # Custom 404 Error Page
+    ErrorDocument 404 /404.php
 </IfModule>
 
-# Error documents
-ErrorDocument 403 /errors/403.php
-ErrorDocument 404 /errors/404.php
-ErrorDocument 500 /errors/500.php
+# Prevent directory listing
+Options -Indexes
 
-# PHP settings
-<IfModule mod_php7.c>
-    php_value upload_max_filesize 10M
-    php_value post_max_size 12M
-    php_value memory_limit 256M
-    php_value max_execution_time 120
-    php_value session.cookie_httponly 1
-    php_value session.cookie_secure 1
-    php_value session.use_strict_mode 1
+# Set default charset
+AddDefaultCharset UTF-8
+
+# Set timezone (Africa/Libreville)
+<IfModule mod_env>
+    SetEnv TZ Africa/Libreville
 </IfModule>
 
-# Compression
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
-</IfModule>
+# Cache control for static assets
+<FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf|webp)$">
+    Header set Cache-Control "max-age=2592000, public"
+</FilesMatch>
 
-# Cache control
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType image/jpg "access plus 1 year"
-    ExpiresByType image/jpeg "access plus 1 year"
-    ExpiresByType image/gif "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
-    ExpiresByType text/css "access plus 1 month"
-    ExpiresByType application/pdf "access plus 1 month"
-    ExpiresByType text/javascript "access plus 1 month"
-    ExpiresByType application/javascript "access plus 1 month"
-    ExpiresByType application/x-javascript "access plus 1 month"
-    ExpiresByType application/x-shockwave-flash "access plus 1 month"
-    ExpiresByType image/x-icon "access plus 1 year"
-    ExpiresDefault "access plus 2 days"
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
