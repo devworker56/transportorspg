@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue sur Transporteur Provincial Gabonais</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-top: none;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Bienvenue sur TPG</h1>
+        <p>Transporteur Provincial Gabonais</p>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour {prenom},</p>
+        
+        <p>Merci d'avoir créé un compte sur notre plateforme Transporteur Provincial Gabonais (TPG).</p>
+        
+        <p>Avec TPG, vous pouvez :</p>
+        <ul>
+            <li>Demander des services de transport pour vos marchandises</li>
+            <li>Comparer les offres des transporteurs</li>
+            <li>Suivre vos livraisons en temps réel</li>
+            <li>Gérer vos paiements en toute sécurité</li>
+        </ul>
+        
+        <p>Pour commencer à utiliser notre plateforme, cliquez sur le bouton ci-dessous :</p>
+        
+        <div style="text-align: center;">
+            <a href="{login_url}" class="btn">Accéder à mon compte</a>
+        </div>
+        
+        <p>Si vous avez des questions ou besoin d'aide, notre équipe est à votre disposition :</p>
+        <ul>
+            <li><strong>Email :</strong> {support_email}</li>
+            <li><strong>Téléphone :</strong> {support_phone}</li>
+        </ul>
+        
+        <p>Cordialement,<br>
+        L'équipe TPG</p>
+    </div>
+    
+    <div class="footer">
+        <p>© {annee} Transporteur Provincial Gabonais. Tous droits réservés.</p>
+        <p>
+            <a href="{mentions_url}">Mentions légales</a> | 
+            <a href="{confidentialite_url}">Politique de confidentialité</a>
+        </p>
+    </div>
+</body>
+</html>

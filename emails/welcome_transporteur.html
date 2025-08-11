@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue sur Transporteur Provincial Gabonais</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-top: none;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #0d6efd;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Bienvenue sur TPG</h1>
+        <p>Transporteur Provincial Gabonais</p>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour {prenom},</p>
+        
+        <p>Nous sommes ravis de vous accueillir en tant que transporteur sur notre plateforme Transporteur Provincial Gabonais (TPG).</p>
+        
+        <p>Votre compte est actuellement en attente de validation par notre équipe. Vous recevrez une notification dès que votre compte sera approuvé.</p>
+        
+        <p>Voici les informations que vous avez fournies :</p>
+        <ul>
+            <li><strong>Type de véhicule :</strong> {type_vehicule}</li>
+            <li><strong>Capacité :</strong> {capacite_kg} kg</li>
+            <li><strong>Plaque d'immatriculation :</strong> {plaque_immatriculation}</li>
+            <li><strong>Provinces desservies :</strong> {provinces}</li>
+        </ul>
+        
+        <p>Une fois votre compte validé, vous pourrez :</p>
+        <ul>
+            <li>Consulter les marchandises disponibles pour transport</li>
+            <li>Faire des offres de prix pour les livraisons</li>
+            <li>Suivre vos livraisons en cours</li>
+            <li>Gérer vos paiements et retraits</li>
+        </ul>
+        
+        <p>Pour accéder à votre compte, cliquez sur le bouton ci-dessous :</p>
+        
+        <div style="text-align: center;">
+            <a href="{login_url}" class="btn">Accéder à mon compte</a>
+        </div>
+        
+        <p>Si vous avez des questions, n'hésitez pas à répondre à cet email ou à nous contacter au {support_phone}.</p>
+        
+        <p>Cordialement,<br>
+        L'équipe TPG</p>
+    </div>
+    
+    <div class="footer">
+        <p>© {annee} Transporteur Provincial Gabonais. Tous droits réservés.</p>
+        <p>
+            <a href="{mentions_url}">Mentions légales</a> | 
+            <a href="{confidentialite_url}">Politique de confidentialité</a>
+        </p>
+    </div>
+</body>
+</html>

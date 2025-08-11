@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votre offre a été acceptée</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #17a2b8;
+            color: white;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-top: none;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #17a2b8;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .details {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Votre offre a été acceptée</h1>
+        <p>Transporteur Provincial Gabonais</p>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour {prenom},</p>
+        
+        <p>Nous avons le plaisir de vous informer que votre offre pour la livraison suivante a été acceptée :</p>
+        
+        <div class="details">
+            <h3>Détails de la livraison</h3>
+            <p><strong>Marchandise :</strong> {marchandise_nom}</p>
+            <p><strong>Origine :</strong> {province_depart}</p>
+            <p><strong>Destination :</strong> Libreville</p>
+            <p><strong>Date limite de livraison :</strong> {date_limite}</p>
+            <p><strong>Prix convenu :</strong> {prix} FCFA</p>
+            <p><strong>Gains estimés :</strong> {gains} FCFA (après commission)</p>
+        </div>
+        
+        <p><strong>Prochaines étapes :</strong></p>
+        <ol>
+            <li>Contactez le vendeur au {vendeur_telephone} pour organiser le ramassage</li>
+            <li>Confirmez le ramassage dans votre espace transporteur</li>
+            <li>Mettez à jour le statut de la livraison pendant le transport</li>
+            <li>Confirmez la livraison une fois terminée</li>
+        </ol>
+        
+        <div style="text-align: center;">
+            <a href="{livraison_url}" class="btn">Voir les détails de la livraison</a>
+        </div>
+        
+        <p>Si vous rencontrez des difficultés ou avez des questions, contactez notre support au {support_phone}.</p>
+        
+        <p>Cordialement,<br>
+        L'équipe TPG</p>
+    </div>
+    
+    <div class="footer">
+        <p>© {annee} Transporteur Provincial Gabonais. Tous droits réservés.</p>
+        <p>
+            <a href="{mentions_url}">Mentions légales</a> | 
+            <a href="{confidentialite_url}">Politique de confidentialité</a>
+        </p>
+    </div>
+</body>
+</html>

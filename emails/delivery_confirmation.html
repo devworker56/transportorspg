@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livraison confirmée</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-top: none;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .details {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .rating {
+            font-size: 24px;
+            color: #ffc107;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Livraison confirmée</h1>
+        <p>Transporteur Provincial Gabonais</p>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour {prenom},</p>
+        
+        <p>Nous vous confirmons que votre livraison a été complétée avec succès.</p>
+        
+        <div class="details">
+            <h3>Détails de la livraison</h3>
+            <p><strong>Marchandise :</strong> {marchandise_nom}</p>
+            <p><strong>Transporteur :</strong> {transporteur_nom}</p>
+            <p><strong>Date de livraison :</strong> {date_livraison}</p>
+            <p><strong>Prix payé :</strong> {prix} FCFA</p>
+        </div>
+        
+        <p>Nous vous invitons à évaluer votre expérience avec le transporteur :</p>
+        
+        <div class="rating">
+            ★★★★★
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{evaluation_url}" class="btn">Évaluer le transporteur</a>
+        </div>
+        
+        <p>Votre paiement a été traité et le transporteur recevra son paiement sous 48 heures.</p>
+        
+        <p>Merci d'avoir utilisé nos services. Nous espérons vous revoir bientôt !</p>
+        
+        <p>Cordialement,<br>
+        L'équipe TPG</p>
+    </div>
+    
+    <div class="footer">
+        <p>© {annee} Transporteur Provincial Gabonais. Tous droits réservés.</p>
+        <p>
+            <a href="{mentions_url}">Mentions légales</a> | 
+            <a href="{confidentialite_url}">Politique de confidentialité</a>
+        </p>
+    </div>
+</body>
+</html>
