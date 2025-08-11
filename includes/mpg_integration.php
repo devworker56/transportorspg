@@ -12,166 +12,192 @@ class MPGIntegration {
     }
     
     /**
-     * Récupère les produits nécessitant un transport depuis MPG
-     * @return array Tableau de produits
+     * Get products needing transport from MPG
+     * @return array Array of products
      */
     public function getProductsNeedingTransport() {
         try {
             $db = getDB();
             
-            // D'abord vérifier notre base de données locale pour les produits en cache
-            $stmt = $db->prepare("SELECT * FROM marchandises WHERE statut = 'en_attente'");
+            // First check local cache
+            $stmt = $db->prepare("
+                SELECT * FROM transport_offers 
+                WHERE status = 'pending' 
+                AND expires_at > NOW()
+            ");
             $stmt->execute();
-            $local_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $localOffers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            if (count($local_products) > 0) {
-                return $local_products;
+            if (count($localOffers) > 0) {
+                return $this->enrichWithProductDetails($localOffers, $db);
             }
             
-            // Si aucun en local, récupérer depuis l'API MPG
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $this->mpg_api_url.'/products/needing-transport');
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: Bearer '.$this->api_key,
-                'Accept: application/json'
-            ]);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            // If nothing in local cache, fetch from MPG API
+            $products = $this->fetchFromMPG();
             
-            $response = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            
-            if ($http_code !== 200) {
-                logError("MPG API Error: HTTP $http_code - $response");
+            if (empty($products)) {
                 return [];
             }
             
-            $products = json_decode($response, true);
-            
-            // Stocker en base de données locale
-            foreach ($products as $product) {
-                $stmt = $db->prepare("INSERT INTO marchandises 
-                    (mpg_product_id, nom, description, poids_kg, dimensions, province_depart_id, 
-                    adresse_ramassage, adresse_livraison, date_limite, statut)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_attente')");
-                
-                $stmt->execute([
-                    $product['id'],
-                    $product['name'],
-                    $product['description'],
-                    $product['weight_kg'],
-                    $product['dimensions'],
-                    $product['province_id'],
-                    $product['pickup_address'],
-                    'Entrepôt MPG, Libreville', // Livraison par défaut à l'entrepôt MPG
-                    $product['transport_deadline']
-                ]);
-            }
+            // Store in local database
+            $this->storeTransportOffers($products, $db);
             
             return $products;
             
         } catch (PDOException $e) {
-            logError("Database error: ".$e->getMessage());
+            logError("Database error in getProductsNeedingTransport: " . $e->getMessage());
             return [];
         } catch (Exception $e) {
-            logError("MPG integration error: ".$e->getMessage());
+            logError("MPG integration error: " . $e->getMessage());
             return [];
         }
     }
     
+    private function fetchFromMPG() {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->mpg_api_url . '/products/needing-transport');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->api_key,
+            'Accept: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        if ($httpCode !== 200) {
+            throw new Exception("MPG API returned HTTP $httpCode: $response");
+        }
+        
+        $data = json_decode($response, true);
+        
+        if (!$data || !$data['success']) {
+            throw new Exception("Invalid MPG API response");
+        }
+        
+        return $data['data'];
+    }
+    
+    private function storeTransportOffers($products, $db) {
+        $db->beginTransaction();
+        
+        try {
+            foreach ($products as $product) {
+                $stmt = $db->prepare("
+                    INSERT INTO transport_offers 
+                    (mpg_product_id, product_name, province, weight_kg, dimensions, 
+                    pickup_address, destination, deadline, status, expires_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', DATE_ADD(NOW(), INTERVAL 2 DAY))
+                ");
+                
+                $stmt->execute([
+                    $product['id'],
+                    $product['name'],
+                    $product['province_name'],
+                    $product['weight_kg'],
+                    $product['dimensions'],
+                    $product['pickup_address'],
+                    $product['destination'],
+                    $product['transport_deadline']
+                ]);
+            }
+            
+            $db->commit();
+        } catch (PDOException $e) {
+            $db->rollBack();
+            throw $e;
+        }
+    }
+    
+    private function enrichWithProductDetails($offers, $db) {
+        $enriched = [];
+        
+        foreach ($offers as $offer) {
+            $enriched[] = [
+                'id' => $offer['id'],
+                'mpg_product_id' => $offer['mpg_product_id'],
+                'nom' => $offer['product_name'],
+                'province_depart_id' => $offer['province'],
+                'poids_kg' => $offer['weight_kg'],
+                'dimensions' => $offer['dimensions'],
+                'adresse_ramassage' => $offer['pickup_address'],
+                'date_limite' => $offer['deadline'],
+                'destination' => $offer['destination']
+            ];
+        }
+        
+        return $enriched;
+    }
+    
     /**
-     * Met à jour le statut de transport d'un produit dans MPG
-     * @param int $mpg_product_id ID du produit dans MPG
-     * @param string $status Nouveau statut
-     * @return bool Succès de l'opération
+     * Update transport status in MPG
+     * @param int $mpgProductId MPG product ID
+     * @param string $status New status
+     * @param int $transporterId TPG transporter ID
+     * @return bool Success status
      */
-    public function updateTransportStatus($mpg_product_id, $status) {
+    public function updateTransportStatus($mpgProductId, $status, $transporterId) {
         try {
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $this->mpg_api_url."/products/$mpg_product_id/transport-status");
+            curl_setopt($ch, CURLOPT_URL, $this->mpg_api_url . '/transport/update-status');
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: Bearer '.$this->api_key,
+                'Authorization: Bearer ' . $this->api_key,
                 'Content-Type: application/json',
                 'Accept: application/json'
             ]);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['status' => $status]));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                'product_id' => $mpgProductId,
+                'status' => $status,
+                'transporter_id' => $transporterId
+            ]));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             
             $response = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             
-            return $http_code === 200;
-            
-        } catch (Exception $e) {
-            logError("MPG status update error: ".$e->getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * Synchronise les données de transport avec MPG
-     * @return bool Succès de l'opération
-     */
-    public function syncTransportData() {
-        try {
-            $db = getDB();
-            
-            // Récupérer les livraisons qui doivent être synchronisées
-            $stmt = $db->prepare("SELECT m.mpg_product_id, at.statut 
-                                FROM marchandises m
-                                JOIN affectations_transport at ON at.marchandise_id = m.id
-                                WHERE m.mpg_product_id IS NOT NULL AND at.synced_with_mpg = 0");
-            $stmt->execute();
-            $shipments = $stmt->fetchAll();
-            
-            foreach ($shipments as $shipment) {
-                $success = $this->updateTransportStatus($shipment['mpg_product_id'], $shipment['statut']);
-                
-                if ($success) {
-                    // Marquer comme synchronisé
-                    $stmt = $db->prepare("UPDATE affectations_transport SET synced_with_mpg = 1 WHERE marchandise_id = 
-                                        (SELECT id FROM marchandises WHERE mpg_product_id = ?)");
-                    $stmt->execute([$shipment['mpg_product_id']]);
-                }
+            if ($httpCode !== 200) {
+                logError("MPG status update failed: HTTP $httpCode - $response");
+                return false;
             }
             
-            return true;
+            $data = json_decode($response, true);
+            return $data['success'] ?? false;
             
-        } catch (PDOException $e) {
-            logError("Sync error: ".$e->getMessage());
+        } catch (Exception $e) {
+            logError("MPG status update error: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Récupère les détails d'un produit depuis MPG
-     * @param int $mpg_product_id ID du produit dans MPG
-     * @return array|false Détails du produit ou false en cas d'erreur
+     * Get product details from MPG
+     * @param int $mpgProductId MPG product ID
+     * @return array|false Product details or false on error
      */
-    public function getProductDetails($mpg_product_id) {
+    public function getProductDetails($mpgProductId) {
         try {
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $this->mpg_api_url."/products/$mpg_product_id");
+            curl_setopt($ch, CURLOPT_URL, $this->mpg_api_url . "/products/$mpgProductId");
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: Bearer '.$this->api_key,
+                'Authorization: Bearer ' . $this->api_key,
                 'Accept: application/json'
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             
             $response = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             
-            if ($http_code !== 200) {
-                logError("MPG API Error: HTTP $http_code - $response");
+            if ($httpCode !== 200) {
                 return false;
             }
             
-            return json_decode($response, true);
+            $data = json_decode($response, true);
+            return $data['data'] ?? false;
             
         } catch (Exception $e) {
-            logError("MPG product details error: ".$e->getMessage());
+            logError("MPG product details error: " . $e->getMessage());
             return false;
         }
     }
 }
-?>
