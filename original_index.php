@@ -1,43 +1,23 @@
 <?php
-// Enable error reporting at the VERY TOP
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+require_once 'includes/auth.php';
+require_once 'includes/mpg_integration.php';
 
-// Absolute paths for includes
-require_once __DIR__ . '/includes/auth.php';
-require_once __DIR__ . '/includes/mpg_integration.php';
-
-try {
-    $mpg = new MPGIntegration();
-    $products = $mpg->getProductsNeedingTransport();
-} catch (Exception $e) {
-    // Log error and show user-friendly message
-    error_log("MPG Integration Error: " . $e->getMessage());
-    $products = [];
-    $error_message = "Service temporairement indisponible";
-}
+$mpg = new MPGIntegration();
+$products = $mpg->getProductsNeedingTransport();
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transporteur Provincial Gabonais - Accueil</title>
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(__DIR__ . '/assets/css/style.css'); ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <?php include __DIR__ . '/includes/header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     
     <div class="container my-5">
-        <?php if (isset($error_message)): ?>
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <?php echo htmlspecialchars($error_message); ?>
-            </div>
-        <?php endif; ?>
-        
         <div class="row mb-4">
             <div class="col-md-8">
                 <h1><i class="fas fa-truck me-2"></i> Marchandises à transporter vers Libreville</h1>
@@ -68,24 +48,22 @@ try {
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
                             <div class="card-header bg-primary text-white">
-                                <h5 class="mb-0"><?php echo htmlspecialchars($product['nom'] ?? ''); ?></h5>
+                                <h5 class="mb-0"><?php echo htmlspecialchars($product['nom']); ?></h5>
                             </div>
                             <div class="card-body">
-                                <p><strong>Province:</strong> <?php echo htmlspecialchars(getProvinceName($product['province_depart_id'] ?? 0)); ?></p>
-                                <p><strong>Poids:</strong> <?php echo htmlspecialchars($product['poids_kg'] ?? ''); ?> kg</p>
-                                <p><strong>Dimensions:</strong> <?php echo htmlspecialchars($product['dimensions'] ?? ''); ?></p>
-                                <p><strong>À livrer avant:</strong> 
-                                    <?php echo isset($product['date_limite']) ? date('d/m/Y', strtotime($product['date_limite'])) : 'N/A'; ?>
-                                </p>
+                                <p><strong>Province:</strong> <?php echo getProvinceName($product['province_depart_id']); ?></p>
+                                <p><strong>Poids:</strong> <?php echo htmlspecialchars($product['poids_kg']); ?> kg</p>
+                                <p><strong>Dimensions:</strong> <?php echo htmlspecialchars($product['dimensions']); ?></p>
+                                <p><strong>À livrer avant:</strong> <?php echo date('d/m/Y', strtotime($product['date_limite'])); ?></p>
                                 
                                 <div class="mt-3">
                                     <p class="mb-1"><strong>Adresse de ramassage:</strong></p>
-                                    <p class="small"><?php echo htmlspecialchars($product['adresse_ramassage'] ?? ''); ?></p>
+                                    <p class="small"><?php echo htmlspecialchars($product['adresse_ramassage']); ?></p>
                                 </div>
                             </div>
                             <div class="card-footer bg-light">
                                 <?php if (isLoggedIn() && isTransporter()): ?>
-                                    <a href="transporteur/offres.php?marchandise_id=<?php echo (int)($product['id'] ?? 0); ?>" 
+                                    <a href="transporteur/offres.php?marchandise_id=<?php echo $product['id']; ?>" 
                                        class="btn btn-success w-100">
                                         <i class="fas fa-hand-holding-usd me-1"></i> Faire une offre
                                     </a>
@@ -102,18 +80,6 @@ try {
         </div>
     </div>
     
-    <?php include __DIR__ . '/includes/footer.php'; ?>
-    
-    <!-- JavaScript validation for good measure -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Validate all links have href attributes
-        document.querySelectorAll('a').forEach(link => {
-            if (!link.getAttribute('href')) {
-                console.warn('Link missing href:', link);
-            }
-        });
-    });
-    </script>
+    <?php include 'includes/footer.php'; ?>
 </body>
 </html>
